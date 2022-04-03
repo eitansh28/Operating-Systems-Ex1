@@ -47,15 +47,4 @@ void socketConnect(){
 }
 
 
-void copyFiles(char *src, char *dst){
-    char ch;
-    FILE *fpSrc = fopen(src, "r");    //
-    FILE *fpDst = fopen(dst, "a");
-    while ((ch = fgetc(fpSrc)) != EOF){
-        fputc(ch, fpDst);
-    }
-    printf("We copied your file!\n");
-    fclose(fpSrc);
-    fclose(fpDst);
-}
 

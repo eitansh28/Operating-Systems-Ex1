@@ -12,19 +12,18 @@
 
 int main(){
     printf("welcome to shell!\n");  //  Q1 + printdir
-    printdir();  //Q1
     int exit=0;
     char req[256];
     bzero(req,256);
     int check=1;
-    scanf("%[^\n]%*c",req);
-    //printf("%s\n",req);
     while(exit==0){
         if(check==0){
             while (getchar()!='\n');  
         }
+        printdir();  //Q1
+        check=scanf("%[^\n]%*c",req);
         // if (getcwd(req, sizeof(req)) != NULL){  //Q2
-        //     printf("cur dir is:%s\n",req);
+        //     printf("cur dir is:%s\n",req);   //print the current directory
         //     continue;
         // }
         if(strcmp(req,"exit")==0){
@@ -44,8 +43,9 @@ int main(){
             continue;
         }
         else if(strcmp(req,"LOCAL")==0){    //Q5
-            
+            //printf("EXIT");
             close(client_socket);
+            wait(NULL);
             //close(server_socket);
             dup2(500,1);
             printf("we back to std output\n");
@@ -72,81 +72,61 @@ int main(){
         
 
         else if(strstr(req,"COPY")){  //Q10
-            char src[40];
-            char dst[40];
-            bzero(src, 40);
-            bzero(dst, 40);
-            int i=0, j = 5;
-            while (req[j] != ' '){
-                src[i] = req[j];   //get the srcfilename from input
-                i++;
-                j++;
+            strtok(req," ");
+            char* in=strtok(NULL," ");  
+            char* out=strtok(NULL," ");
+            FILE *src = fopen(in, "r");   //fopen, fread, fwrite are library functions
+            FILE *dest = fopen(out, "w");
+            char buffer[100];
+            fread(buffer, 1, 1, src);
+            while (feof(src) == 0) {
+                fwrite(buffer, 1, 1, dest);
+                fread(buffer, 1, 1, src);
             }
-            j++;
-            i=0;
-            while (req[j] != '\0'){   //get the dstfilename from input
-                dst[i] = req[j];
-                i++;
-                j++;
-            }
-            copyFiles(src, dst);   //func that copy srcfile to dstfile
+            fclose(src);
+            fclose(dest);
             bzero(req,256);
             continue;
         }
-
+        
         else if(strstr(req,"DELETE")){   //Q11
-            char filename[40];
-            bzero(filename,40);
-            int i=0, j=7;
-            while(req[j]!=' '){
-                filename[i]=req[j];   //get the filename from input
-                j++;
-                i++;
-            }
-            unlink(filename);   //'unlink' is a system call
-            printf("file %s has been deleted!\n",filename);
+            strtok(req," ");
+            unlink(strtok(NULL," "));
+            printf("file %s has been deleted!\n",req+7);
             bzero(req,256);
             continue;
         }
-        else{
-            //system(req);    //'system' is a library function    //Q8
-            int sonID=fork();    //Q9
+        else {
+            //system(req);      //'system' is a library function    //Q8
+            char* exec[256];     //Q9
+            int sonID=fork(); 
+            // if(sonID<0){
+            //     return 1;
+            // }  
             if(sonID==0){
-                char** exec=NULL;
                 char* split;
-                //exec[0]=split;
-                printf("%s fd\n",req);
-                const char s[2] = " ";
-                split=strtok(req,s);
-                //printf("%s",req);
-                //printf("%s",split);
-                if(split==NULL){
-                    printf("nvnvnvnv\n");
-                }else{
-                    printf("gfgf\n");
-                    printf("%s",split);
-                }
+                split=strtok(req," ");
                 int i=0;
-                while(split){
-                    printf("kkkkk");
-                    
-                    exec[i]=split;
+                while(split !=NULL){
+                    //printf("kkkkk\n");
+                    exec[i++]=split;
                     split=strtok(NULL," ");
-                    i++;
+                    //i++;
                 }
-                //char execFolder[40]="/bin/";
-                //strcat(execFolder,req);
-                //char* token = strtok(NULL, " ");
-                execvp(exec[0],exec);
+                exec[i]=NULL;
+                if(exec[1]==NULL){
+                    char execFolder[40]="/bin/";
+                    strcat(execFolder,req);
+                    execlp(execFolder,req,NULL);
+                }else{
+                    execvp(exec[0],exec);
+                }  
             }
             else{
                 wait(NULL);
                 printf("your son finish his job\n");
-                bzero(req,256);
             }
         }
-        printdir();
         bzero(req,256);
-        check=scanf("%[^\n]%*c",req); 
     }
 }

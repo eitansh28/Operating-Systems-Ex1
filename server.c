@@ -17,7 +17,7 @@
 int main() {
     // on linux to prevent crash on closing socket.
     signal(SIGPIPE, SIG_IGN);
-    char text[1024];
+    char buf[1024];
     // create a socket lisener.
     server_socket = -1;
     if((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -46,31 +46,27 @@ int main() {
 
     struct sockaddr_in client_addr;
     socklen_t client_addr_length = sizeof(client_addr);
-
-    int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_length);
-    if(client_socket == -1) {
-        printf("listen failed with error code : %d",errno);
-        close(server_socket);
-        return -1;
-    } else {
-        printf("connection accepted\n");
-    }
-    while (1){
-        bzero(text, 1024);
-        if (!recv(client_socket, text, sizeof(text), 0)){
-            close(client_socket);
+    while(1){
+        int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_length);
+        if(client_socket == -1) {
+            printf("listen failed with error code : %d",errno);
+            close(server_socket);
+            return -1;
+        } else {
+            printf("connection accepted\n");
         }
-        else {
-            if(strstr(text,"LOCAL")){
-                close(server_socket);
+        while (1){
+            bzero(buf, 1024);
+            if (!recv(client_socket, buf, sizeof(buf), 0)){
+                close(client_socket);
                 break;
-            }//printf("\n");
-            for (int i = 0; i < 1024; i++){
-                printf("%c", text[i]);
             }
-            //printf("\n");
+            else {
+                for (int i = 0; i < 1024; i++){
+                    printf("%c", buf[i]);
+                }
+            }
         }
-    }close(server_socket);
+    }
     return 0;
-    
 }
